@@ -17,6 +17,12 @@
               {{ $t('common.queryBtn') }}
             </el-button>
             <el-button @click="resetQuery" icon="Refresh">{{ $t('common.resetBtn') }}</el-button>
+            <el-button
+                :disabled="multiple"
+                @click="generatorZip(selectObjs)"
+                icon="Download">
+              {{ $t('common.download') }}
+            </el-button>
           </el-form-item>
         </el-form>
       </el-row>
@@ -34,12 +40,14 @@
       </el-row>
       <el-table
           :data="state.dataList"
+          @selection-change="handleSelectionChange"
           style="width: 100%"
           v-loading="state.loading"
           border
           :cell-style="tableStyle.cellStyle"
           :header-cell-style="tableStyle.headerCellStyle"
       >
+        <el-table-column type="selection" width="40" />
         <el-table-column :label="t('table.index')" type="index" width="60"/>
         <el-table-column :label="t('table.tableName')" prop="name" show-overflow-tooltip/>
         <el-table-column :label="t('table.tableDesc')" prop="comment" show-overflow-tooltip/>
@@ -78,6 +86,11 @@ const queryRef = ref();
 const showSearch = ref(true);
 // 多选变量
 const datasourceList = ref();
+
+// 多选rows
+const selectObjs = ref([]) as any;
+// 是否可以多选
+const multiple = ref(true);
 
 const state: BasicTableProps = reactive<BasicTableProps>({
   queryForm: {
@@ -136,5 +149,17 @@ const resetQuery = () => {
 // 导出excel
 const exportExcel = () => {
   downBlobFile('/gen/table/export', state.queryForm, 'table.xlsx');
+};
+
+// 多选事件
+const handleSelectionChange = (objs: { name: string }[]) => {
+  selectObjs.value = objs.map(({ name }) => name);
+  multiple.value = !objs.length;
+};
+
+// 生成
+const generatorZip = async (names: string[]) => {
+
+  downBlobFile(`/gen/generator/download/`+state.queryForm.dsName+`?tableNames=`+names, {}, `pig-code.zip`);
 };
 </script>
